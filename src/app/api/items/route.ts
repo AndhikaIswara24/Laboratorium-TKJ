@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import QRCode from 'qrcode';
 
 // GET all items
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -44,8 +44,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Auto-generate QR code
+    // Create item first to get the ID
+    const item = await prisma.inventoryItem.create({
+      data: {
+        code,
+        name,
+        description: description || null,
+        category,
+        quantity: quantity || 1,
+        qrCodeUrl: null, // Will be updated after QR generation
+      },
+    });
+
+    // Auto-generate QR code with item ID
     const qrData = JSON.stringify({
+      itemId: item.id,
       code,
       name,
       timestamp: new Date().toISOString(),
@@ -54,21 +67,15 @@ export async function POST(req: NextRequest) {
     let qrCodeUrl: string | null = null;
     try {
       qrCodeUrl = await QRCode.toDataURL(qrData);
+      // Update item with QR code URL
+      await prisma.inventoryItem.update({
+        where: { id: item.id },
+        data: { qrCodeUrl },
+      });
     } catch (err) {
       console.error('Error generating QR code:', err);
       // Continue without QR code if generation fails
     }
-
-    const item = await prisma.inventoryItem.create({
-      data: {
-        code,
-        name,
-        description: description || null,
-        category,
-        quantity: quantity || 1,
-        qrCodeUrl,
-      },
-    });
 
     return NextResponse.json(item, { status: 201 });
   } catch (error) {

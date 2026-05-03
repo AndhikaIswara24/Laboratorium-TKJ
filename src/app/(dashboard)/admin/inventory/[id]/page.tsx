@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import QRScanner from '@/components/QRScanner';
+import { Download, RefreshCw, Copy, Check } from 'lucide-react';
+import { getBorrowingStatusLabel, getItemConditionLabel } from '@/lib/labels';
 
 interface InventoryItem {
   id: string;
@@ -29,12 +31,11 @@ export default function ItemDetailPage({
   const [item, setItem] = useState<InventoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [qrGenerating, setQrGenerating] = useState(false);
+  const [testScanMode, setTestScanMode] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchItem();
-  }, [params.id]);
-
-  const fetchItem = async () => {
+  const fetchItem = useCallback(async () => {
     try {
       const response = await fetch(`/api/items/${params.id}`);
       if (!response.ok) {
@@ -47,7 +48,11 @@ export default function ItemDetailPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchItem();
+  }, [fetchItem]);
 
   const handleDelete = async () => {
     if (!confirm('Yakin ingin menghapus barang ini?')) return;
@@ -70,6 +75,68 @@ export default function ItemDetailPage({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadQR = async () => {
+    if (!item?.qrCodeUrl) return;
+
+    try {
+      const link = document.createElement('a');
+      link.href = item.qrCodeUrl;
+      link.download = `QR-${item.code}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      alert('Gagal download QR Code');
+    }
+  };
+
+  const handleRegenerateQR = async () => {
+    if (!item) return;
+
+    setQrGenerating(true);
+    try {
+      const response = await fetch(`/api/items/${item.id}/regenerate-qr`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Gagal generate ulang QR Code');
+      }
+
+      const updatedItem = await response.json();
+      setItem(updatedItem);
+      alert('✅ QR Code berhasil di-generate ulang');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Terjadi kesalahan');
+    } finally {
+      setQrGenerating(false);
+    }
+  };
+
+  const handleCopyQRData = () => {
+    if (!item) return;
+
+    const qrData = JSON.stringify({
+      itemId: item.id,
+      code: item.code,
+      name: item.name,
+      timestamp: new Date().toISOString(),
+    });
+
+    navigator.clipboard.writeText(qrData).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleTestScanSuccess = (decodedText: string, parsedData?: any) => {
+    if (parsedData && parsedData.itemId === item?.id) {
+      alert(`✅ QR Code Valid!\n\nData:\n- Item ID: ${parsedData.itemId}\n- Kode: ${parsedData.code}\n- Nama: ${parsedData.name}`);
+    } else {
+      alert('❌ QR Code tidak cocok dengan item ini!');
+    }
   };
 
   const getConditionColor = (condition: string) => {
@@ -171,7 +238,7 @@ export default function ItemDetailPage({
                 <p className="text-sm text-gray-600">Kondisi</p>
                 <div className="mt-1">
                   <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getConditionColor(item.condition)}`}>
-                    {item.condition}
+                    {getItemConditionLabel(item.condition)}
                   </span>
                 </div>
               </div>
@@ -208,19 +275,71 @@ export default function ItemDetailPage({
             <div className="bg-white rounded-lg shadow-md p-6 text-center print:p-2 print:shadow-none">
               <h3 className="text-xl font-bold mb-4 print:mb-2">QR Code</h3>
               <div className="flex justify-center mb-4 print:mb-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={item.qrCodeUrl}
                   alt="QR Code"
                   className="w-56 h-56 print:w-48 print:h-48 border-2 border-gray-200"
                 />
               </div>
-              <p className="text-sm text-gray-600">{item.code}</p>
+              <p className="text-sm text-gray-600 mb-4">{item.code}</p>
+              
+              {/* QR Code Actions */}
+              <div className="space-y-2 print:hidden">
+                <button
+                  onClick={handleDownloadQR}
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  <Download size={18} />
+                  Download QR
+                </button>
+                <button
+                  onClick={handleCopyQRData}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  {copied ? (
+                    <>
+                      <Check size={18} />
+                      Disalin!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={18} />
+                      Copy Data QR
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleRegenerateQR}
+                  disabled={qrGenerating}
+                  className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  <RefreshCw size={18} />
+                  {qrGenerating ? 'Generate...' : 'Generate Ulang'}
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="bg-gray-100 rounded-lg shadow-md p-6 text-center">
-              <p className="text-gray-500">QR Code tidak tersedia</p>
+            <div className="bg-gray-100 rounded-lg shadow-md p-6 text-center print:hidden">
+              <p className="text-gray-500 mb-4">QR Code tidak tersedia</p>
+              <button
+                onClick={handleRegenerateQR}
+                disabled={qrGenerating}
+                className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                <RefreshCw size={18} />
+                {qrGenerating ? 'Generate...' : 'Generate QR Code'}
+              </button>
             </div>
           )}
+
+          {/* Test Scan Button */}
+          <button
+            onClick={() => setTestScanMode(!testScanMode)}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors print:hidden"
+          >
+            {testScanMode ? 'Tutup Uji Pindai' : 'Uji Pindai QR'}
+          </button>
 
           {/* Print Info */}
           <div className="hidden print:block bg-gray-50 p-4 text-center text-sm">
@@ -232,6 +351,24 @@ export default function ItemDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Test Scan Section */}
+      {testScanMode && (
+        <div className="mt-8 bg-indigo-50 rounded-lg shadow-md p-6 border-2 border-indigo-200">
+          <h2 className="text-2xl font-bold mb-4 text-indigo-900">Uji Pindai Kode QR</h2>
+          <p className="text-indigo-800 mb-4">
+            Gunakan pemindai di bawah untuk menguji kode QR barang ini. Pemindai akan memvalidasi bahwa data QR sesuai dengan barang.
+          </p>
+          <div className="bg-white rounded-lg p-4">
+            <QRScanner
+              onScanSuccess={handleTestScanSuccess}
+              onScanError={(error) => {
+                console.error('Scan error:', error);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Borrowing History */}
       <div className="mt-8 print:hidden">
@@ -259,7 +396,7 @@ export default function ItemDetailPage({
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800">
-                        {borrowing.status}
+                        {getBorrowingStatusLabel(borrowing.status)}
                       </span>
                     </td>
                   </tr>

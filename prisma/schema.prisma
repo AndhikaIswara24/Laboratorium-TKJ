@@ -30,8 +30,9 @@ enum BorrowStatus {
 }
 
 enum EvaluationResult {
-  FEASIBLE
-  UNFEASIBLE
+  USABLE
+  NEEDS_REPAIR
+  NOT_USABLE
 }
 
 model User {
@@ -55,6 +56,8 @@ model InventoryItem {
   category      String
   quantity      Int         @default(1)
   condition     ItemCondition @default(GOOD)
+  conditionScore Int        @default(5) // Skala 1-5: kondisi fisik barang
+  repairsCount  Int        @default(0) // Jumlah perbaikan yang pernah dilakukan
   qrCodeUrl     String?     // URL/Data string untuk QR Code
   acquisitionDate DateTime  @default(now())
   createdAt     DateTime    @default(now())
@@ -69,6 +72,7 @@ model Borrowing {
   id            String      @id @default(uuid())
   userId        String
   itemId        String
+  quantity      Int         @default(1)
   borrowDate    DateTime    @default(now())
   expectedReturnDate DateTime
   actualReturnDate   DateTime?
@@ -94,16 +98,20 @@ model Monitoring {
 }
 
 model NaiveBayesEvaluation {
-  id               String   @id @default(uuid())
+  id               String      @id @default(uuid())
   itemId           String
-  evaluationDate   DateTime @default(now())
+  evaluationDate   DateTime    @default(now())
   
-  frequencyOfUse   Int      // Seberapa sering dipinjam/digunakan
-  ageInMonths      Int      // Umur barang sejak diakuisisi
-  previousCondition ItemCondition
+  ageInYears       Float       // Umur barang dalam tahun
+  frequencyPerMonth Int        // Frekuensi penggunaan per bulan
+  repairsCount     Int         // Jumlah perbaikan yang pernah dilakukan
+  conditionScore   Int         // Skala 1-5: kondisi fisik barang
 
   result           EvaluationResult
-  probability      Float    
+  probability      Float       // Confidence score (0-1)
+  usableProbability Float      // Probabilitas USABLE
+  needsRepairProbability Float  // Probabilitas NEEDS_REPAIR
+  notUsableProbability Float    // Probabilitas NOT_USABLE
 
   item             InventoryItem @relation(fields: [itemId], references: [id])
 }
