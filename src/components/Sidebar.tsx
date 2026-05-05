@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -7,6 +7,10 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { LogOut, Menu, X } from 'lucide-react';
 
+/**
+ * Komponen Sidebar navigasi utama aplikasi.
+ * Menampilkan informasi pengguna (role) dan tautan dashboard berdasarkan peran.
+ */
 export default function Sidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();

@@ -4,6 +4,8 @@ import QRScanner from '@/components/QRScanner';
 import Link from 'next/link';
 
 export default function SiswaBorrowScanPage() {
+  // Halaman pemindaian QR untuk siswa (client)
+  // Menggunakan komponen `QRScanner` untuk mendeteksi QR dan mengarahkan ke form peminjaman
   return (
     <div>
       <div className="mb-8">

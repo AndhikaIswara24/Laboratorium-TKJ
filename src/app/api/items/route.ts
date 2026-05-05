@@ -4,6 +4,11 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import QRCode from 'qrcode';
 
+/**
+ * API Route: /api/items
+ * - GET: ambil semua inventory item beserta relasi
+ * - POST: buat item baru (hanya admin) dan generate QR code
+ */
 // GET all items
 export async function GET() {
   try {
@@ -44,7 +49,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create item first to get the ID
+    // Buat item terlebih dahulu agar mendapatkan `id` untuk QR
     const item = await prisma.inventoryItem.create({
       data: {
         code,
@@ -56,7 +61,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Auto-generate QR code with item ID
+    // Auto-generate QR code berisi informasi dasar item
     const qrData = JSON.stringify({
       itemId: item.id,
       code,
@@ -67,7 +72,7 @@ export async function POST(req: NextRequest) {
     let qrCodeUrl: string | null = null;
     try {
       qrCodeUrl = await QRCode.toDataURL(qrData);
-      // Update item with QR code URL
+      // Update item dengan URL QR code
       await prisma.inventoryItem.update({
         where: { id: item.id },
         data: { qrCodeUrl },

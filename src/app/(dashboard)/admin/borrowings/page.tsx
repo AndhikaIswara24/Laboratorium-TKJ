@@ -8,6 +8,9 @@ import { id } from 'date-fns/locale';
 import { getBorrowingStatusLabel } from '@/lib/labels';
 
 export default async function AdminBorrowingsPage() {
+  // Halaman manajemen peminjaman untuk Admin
+  // Menampilkan daftar permintaan peminjaman (PENDING/APPROVED)
+  // Admin dapat menyetujui atau menolak melalui komponen `BorrowingActions`
   const session = await getServerSession(authOptions);
   
   if (!session || session.user.role !== 'ADMIN') {

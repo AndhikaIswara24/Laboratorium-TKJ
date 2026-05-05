@@ -27,6 +27,9 @@ export default function ItemDetailPage({
 }: {
   params: { id: string };
 }) {
+  // Halaman detail barang (client component)
+  // - Menampilkan informasi lengkap barang, QR code, riwayat peminjaman, dan monitoring
+  // - Menyediakan aksi: cetak, download QR, regenerate QR, edit, hapus, dan uji pindai (test scan)
   const router = useRouter();
   const [item, setItem] = useState<InventoryItem | null>(null);
   const [loading, setLoading] = useState(true);

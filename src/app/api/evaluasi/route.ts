@@ -4,6 +4,11 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { getDetailedEvaluation, ItemFeatures } from '@/lib/naiveBayes';
 
+/**
+ * Route evaluasi (Naive Bayes)
+ * - GET: ambil semua evaluasi (admin)
+ * - POST: jalankan evaluasi pada sebuah item dan simpan hasilnya
+ */
 // GET all evaluations (admin only)
 export async function GET() {
   try {

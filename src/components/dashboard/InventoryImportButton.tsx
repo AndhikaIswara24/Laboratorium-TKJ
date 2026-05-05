@@ -13,7 +13,12 @@ interface ImportResult {
   }>;
   error?: string;
 }
-
+/**
+ * Tombol untuk mengimpor daftar inventaris dari file Excel/CSV.
+ * - Membuka dialog file
+ * - Mengirim `FormData` ke `/api/items/import`
+ * - Menampilkan ringkasan hasil impor (berhasil/gagal)
+ */
 export function InventoryImportButton() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);

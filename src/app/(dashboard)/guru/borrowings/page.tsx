@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { getBorrowingStatusLabel } from '@/lib/labels';
 
 export default async function GuruBorrowingsPage() {
+  // Halaman daftar peminjaman untuk peran `GURU`
+  // Menampilkan permintaan dan peminjaman aktif agar guru dapat memantau siswa
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user.role !== 'GURU' && session.user.role !== 'ADMIN')) {

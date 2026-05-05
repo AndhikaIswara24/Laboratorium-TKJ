@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { getBorrowingStatusLabel } from '@/lib/labels';
 
 export default async function HistoryPage() {
+  // Halaman riwayat peminjaman untuk user atau admin
+  // Menyediakan tampilan daftar peminjaman yang sudah selesai dan opsi ekspor untuk admin
   const session = await getServerSession(authOptions);
   
   if (!session) {

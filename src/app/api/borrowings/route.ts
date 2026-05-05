@@ -3,6 +3,12 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
+/**
+ * API Route: /api/borrowings
+ * - GET: mengembalikan daftar peminjaman (memeriksa session terlebih dahulu)
+ * - POST: membuat permintaan peminjaman baru (memeriksa stok dan session)
+ */
+
 // GET all borrowings
 export async function GET() {
   try {
@@ -11,6 +17,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Ambil semua peminjaman beserta relasi user dan item, urut terbaru terlebih dahulu
     const borrowings = await prisma.borrowing.findMany({
       include: {
         user: true,
@@ -46,7 +53,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if item exists and has stock
+    // Periksa apakah item ada dan punya stok
     const item = await prisma.inventoryItem.findUnique({
       where: { id: itemId },
     });
@@ -58,6 +65,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Buat record peminjaman (status PENDING)
     const borrowing = await prisma.borrowing.create({
       data: {
         userId: session.user.id,

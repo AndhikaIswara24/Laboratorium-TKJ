@@ -19,6 +19,10 @@ interface ExportExcelButtonProps {
   data: ExportData[];
 }
 
+/**
+ * Tombol untuk mengekspor data peminjaman ke file Excel.
+ * Menggunakan library `xlsx` yang dimuat secara dinamis di client.
+ */
 export function ExportExcelButton({ data }: ExportExcelButtonProps) {
   const handleExport = async () => {
     const XLSX = await import('xlsx');

@@ -6,6 +6,15 @@ import { authOptions } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { ItemCondition, BorrowStatus } from '@prisma/client';
 
+/**
+ * Buat permintaan peminjaman baru.
+ * Langkah:
+ * 1. Verifikasi session user
+ * 2. Cek apakah user memiliki item terlambat
+ * 3. Cek ketersediaan stok
+ * 4. Buat record `Borrowing` dengan status PENDING
+ * 5. Revalidate path terkait agar UI terupdate
+ */
 export async function createBorrowing(data: {
   itemId: string;
   quantity: number;
@@ -20,7 +29,7 @@ export async function createBorrowing(data: {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });
   if (!user) return { success: false, error: 'User not found' };
 
-  // 1. Check if user has overdue items
+  // 1. Cek apakah user memiliki barang yang terlambat dikembalikan
   const overdueItems = await prisma.borrowing.findMany({
     where: {
       userId: user.id,
@@ -33,7 +42,7 @@ export async function createBorrowing(data: {
     return { success: false, error: 'Anda memiliki barang pinjaman yang terlambat dikembalikan. Harap kembalikan terlebih dahulu.' };
   }
 
-  // 2. Check stock
+  // 2. Cek stok barang
   const item = await prisma.inventoryItem.findUnique({ where: { id: data.itemId } });
   if (!item) return { success: false, error: 'Barang tidak ditemukan' };
 
@@ -41,7 +50,7 @@ export async function createBorrowing(data: {
     return { success: false, error: `Stok tidak mencukupi. Sisa stok: ${item.quantity}` };
   }
 
-  // 3. Create Borrowing request
+  // 3. Buat permintaan peminjaman (status PENDING)
   try {
     const borrowing = await prisma.borrowing.create({
       data: {
@@ -63,12 +72,14 @@ export async function createBorrowing(data: {
 }
 
 export async function approveBorrowing(borrowingId: string) {
+  // Hanya admin yang boleh menyetujui peminjaman
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== 'ADMIN') {
     return { success: false, error: 'Unauthorized' };
   }
 
   try {
+    // Gunakan transaksi untuk memastikan stok dan status konsisten
     return await prisma.$transaction(async (tx) => {
       const borrowing = await tx.borrowing.findUnique({
         where: { id: borrowingId },
@@ -83,13 +94,13 @@ export async function approveBorrowing(borrowingId: string) {
         throw new Error('Stok tidak mencukupi untuk memenuhi permintaan ini');
       }
 
-      // Approve borrowing
+      // Set status menjadi APPROVED
       const updated = await tx.borrowing.update({
         where: { id: borrowingId },
         data: { status: BorrowStatus.APPROVED }
       });
 
-      // Decrease stock
+      // Kurangi stok sesuai jumlah yang dipinjam
       await tx.inventoryItem.update({
         where: { id: borrowing.itemId },
         data: { quantity: { decrement: borrowing.quantity } }
@@ -100,12 +111,14 @@ export async function approveBorrowing(borrowingId: string) {
   } catch (error: any) {
     return { success: false, error: error.message };
   } finally {
+    // Revalidasi halaman admin terkait agar UI terupdate
     revalidatePath('/admin/borrowings');
     revalidatePath('/admin');
   }
 }
 
 export async function rejectBorrowing(borrowingId: string, reason: string) {
+  // Hanya admin dapat menolak permintaan
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== 'ADMIN') {
     return { success: false, error: 'Unauthorized' };
@@ -119,6 +132,7 @@ export async function rejectBorrowing(borrowingId: string, reason: string) {
         notes: reason 
       }
     });
+    // Revalidate agar daftar peminjaman admin terupdate
     revalidatePath('/admin/borrowings');
     return { success: true, data: updated };
   } catch (error: any) {
@@ -131,6 +145,7 @@ export async function processReturn(data: {
   condition: ItemCondition;
   notes?: string;
 }) {
+  // Hanya admin boleh memproses pengembalian
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== 'ADMIN') {
     return { success: false, error: 'Unauthorized' };
@@ -140,13 +155,14 @@ export async function processReturn(data: {
   if (!adminUser) return { success: false, error: 'Admin not found' };
 
   try {
+    // Transaksi: update borrowing, kembalikan stok, buat log monitoring
     return await prisma.$transaction(async (tx) => {
       const borrowing = await tx.borrowing.findUnique({ where: { id: data.borrowingId } });
       if (!borrowing || (borrowing.status !== 'APPROVED' && borrowing.status !== 'OVERDUE')) {
         throw new Error('Status peminjaman tidak valid untuk dikembalikan');
       }
 
-      // 1. Update Borrowing
+      // 1. Update status peminjaman jadi RETURNED
       const updatedBorrowing = await tx.borrowing.update({
         where: { id: data.borrowingId },
         data: {
@@ -155,7 +171,7 @@ export async function processReturn(data: {
         }
       });
 
-      // 2. Return stock
+      // 2. Tambah stok kembali dan update kondisi barang
       await tx.inventoryItem.update({
         where: { id: borrowing.itemId },
         data: { 
@@ -164,7 +180,7 @@ export async function processReturn(data: {
         }
       });
 
-      // 3. Create Monitoring log
+      // 3. Catat aktivitas pemeriksaan/monitoring
       await tx.monitoring.create({
         data: {
           itemId: borrowing.itemId,
@@ -179,6 +195,7 @@ export async function processReturn(data: {
   } catch (error: any) {
     return { success: false, error: error.message };
   } finally {
+    // Revalidasi beberapa route agar UI terupdate
     revalidatePath('/admin/return');
     revalidatePath('/admin/borrowings');
     revalidatePath('/history');

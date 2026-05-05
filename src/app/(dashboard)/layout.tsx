@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import Sidebar from '@/components/Sidebar';
 import { useSession, SessionProvider, signOut } from 'next-auth/react';
@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { LogOut } from 'lucide-react';
 
+/**
+ * Layout untuk area dashboard yang membutuhkan autentikasi.
+ * - Membungkus halaman dashboard dengan `Sidebar` dan header
+ * - Memastikan user terautentikasi, jika tidak diarahkan ke `/login`
+ */
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();

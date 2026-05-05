@@ -6,6 +6,8 @@ import { ReturnForm } from '@/components/borrow/ReturnForm';
 import Link from 'next/link';
 
 export default async function AdminReturnPage() {
+  // Halaman pengembalian barang untuk Admin
+  // Menampilkan daftar peminjaman aktif yang dapat dikembalikan dan menyediakan `ReturnForm`
   const session = await getServerSession(authOptions);
   
   if (!session || session.user.role !== 'ADMIN') {

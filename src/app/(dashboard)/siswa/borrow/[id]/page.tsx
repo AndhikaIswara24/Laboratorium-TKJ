@@ -26,6 +26,9 @@ export default function BorrowItemPage({
 }: {
   params: { id: string };
 }) {
+  // Halaman formulir peminjaman untuk siswa (client)
+  // - Memuat data barang berdasarkan `params.id`
+  // - Menyediakan form pengajuan peminjaman yang mengirim POST ke `/api/borrowings`
   const router = useRouter();
   const { data: session } = useSession();
   const [item, setItem] = useState<InventoryItem | null>(null);

@@ -1,3 +1,7 @@
+/**
+ * Label presentasi untuk status peminjaman dan kondisi barang.
+ * Menggunakan Bahasa Indonesia untuk tampilan pada UI.
+ */
 export const borrowingStatusLabels: Record<string, string> = {
   PENDING: 'Menunggu',
   APPROVED: 'Disetujui',

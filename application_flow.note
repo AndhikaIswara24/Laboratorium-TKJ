@@ -1,0 +1,75 @@
+Ringkasan Alur Aplikasi - Lab Management (SMK Muhammadiyah 12 Jakarta Utara)
+
+1. Gambaran Umum
+- Aplikasi ini dibangun dengan Next.js (App Router). Menyediakan manajemen inventaris laboratorium: peminjaman, pengembalian, monitoring, dan evaluasi.
+- Otentikasi menggunakan `next-auth`.
+- Database menggunakan Prisma (Postgres/SQLite tergantung env) dengan model: `User`, `InventoryItem`, `Borrowing`, `Monitoring`, dll.
+
+2. Inisialisasi & Layout
+- `src/app/layout.tsx`: Root layout, memuat font lokal dan membungkus seluruh halaman dengan komponen `Providers`.
+- `src/components/Providers.tsx`: Membungkus aplikasi dengan `SessionProvider` dari `next-auth` sehingga session tersedia di client.
+
+3. Autentikasi & Pengalihan
+- `src/lib/auth.ts`: (file library untuk konfigurasi next-auth) menentukan provider dan `authOptions`.
+- `src/app/page.tsx`: Halaman root. Memanggil `getServerSession(authOptions)` untuk mendapatkan sesi. Jika belum login, dialihkan ke `/login`. Jika login, dialihkan berdasarkan `session.user.role`:
+  - `ADMIN` -> `/admin`
+  - `GURU` -> `/guru`
+  - lainnya -> `/siswa`
+
+4. Database (Prisma)
+- `src/lib/prisma.ts`: Menginisialisasi singleton `PrismaClient` dan mengekspornya. Di development script menyimpan instance di `globalThis` untuk mencegah multiple clients saat hot reload.
+
+5. API Routes (Server)
+- Contoh: `src/app/api/borrowings/route.ts`:
+  - `GET`: Mengembalikan daftar peminjaman (termasuk relasi user dan item), requiere session.
+  - `POST`: Membuat permintaan peminjaman baru, memeriksa ketersediaan stok dan otorisasi.
+- Semua route server memeriksa session via `getServerSession(authOptions)` untuk otorisasi.
+
+6. Server Actions & Transaksi
+- `src/app/actions/borrowing.ts` berisi fungsi server (`use server`) yang dipanggil dari UI untuk operasi:
+  - `createBorrowing(data)`: Membuat permintaan peminjaman — memeriksa user, denda/terlambat, stok, lalu membuat record `Borrowing` dan memanggil `revalidatePath` untuk invalidasi cache pada route terkait.
+  - `approveBorrowing(borrowingId)`: Hanya oleh admin. Membungkus operasi dalam `prisma.$transaction` untuk:
+    - Validasi status PENDING
+    - Kurangi stok pada `inventoryItem`
+    - Ubah status peminjaman menjadi `APPROVED`
+  - `rejectBorrowing(borrowingId, reason)`: Update status menjadi `REJECTED` dan simpan notes.
+  - `processReturn({ borrowingId, condition, notes })`: Proses pengembalian — ubah status jadi `RETURNED`, kembalikan stok, buat log `monitoring`.
+- Semua operasi penting mengembalikan objek `{ success: boolean, data?, error? }`.
+
+7. Frontend (Pages & Komponen)
+- Struktur halaman berada di `src/app/(dashboard)` untuk area yang memerlukan otorisasi.
+- Komponen UI (dalam `src/components`) menyajikan fungsi seperti:
+  - `QRScanner.tsx` untuk pemindaian QR
+  - `Sidebar.tsx` navigasi
+  - Dashboard: chart, stat card, import button, dsb.
+- Form peminjaman di `src/components/borrow/*` memanggil server action `createBorrowing` atau API route sesuai implementasi.
+
+8. Revalidasi & Cache
+- Setelah perubahan data penting (create/approve/reject/return), kode memanggil `revalidatePath()` untuk menginvalidasi data statis atau cache pada route terkait agar UI segera konsisten.
+
+9. Testing
+- Terdapat beberapa file test untuk library (`src/lib/*.test.ts`) dan route/API tests di `src/app/api/__tests__`.
+
+10. Alur Singkat Use Case Peminjaman
+1. User (siswa/guru) login via next-auth.
+2. Pada UI peminjaman, user mengisi form -> memanggil `createBorrowing` (server action) atau POST API.
+3. Server memeriksa session, user, overdue items, stok.
+4. Jika valid, buat `Borrowing` dengan status `PENDING`.
+5. Admin melihat daftar peminjaman di `/admin/borrowings` -> bisa `approve` atau `reject`.
+6. Saat approve: transaksi mengurangi stok dan set status `APPROVED`.
+7. Saat pengembalian: admin memproses return -> ubah status `RETURNED`, tambahkan stok kembali, buat `Monitoring` log.
+
+11. Catatan Implementasi & Lokasi Kode
+- Root layout: [src/app/layout.tsx](src/app/layout.tsx#L1)
+- Providers: [src/components/Providers.tsx](src/components/Providers.tsx#L1)
+- Entry page & redirect: [src/app/page.tsx](src/app/page.tsx#L1)
+- Prisma client: [src/lib/prisma.ts](src/lib/prisma.ts#L1)
+- Server actions peminjaman: [src/app/actions/borrowing.ts](src/app/actions/borrowing.ts#L1)
+- API route borrowings: [src/app/api/borrowings/route.ts](src/app/api/borrowings/route.ts#L1)
+
+12. Langkah Selanjutnya yang Saya Sarankan
+- Jika Anda setuju, saya akan mulai menambahkan komentar dalam Bahasa Indonesia pada fungsi-fungsi di file `lib` dan `app/actions`, lalu bertahap ke `app/api` dan komponen UI.
+- Saya akan melakukan perubahan bertahap per folder (mis. `lib` -> `app/actions` -> `app/api` -> `components` -> `pages`) agar mudah ditinjau.
+
+---
+File ini dibuat otomatis sebagai ringkasan awal. Jika Anda ingin detail lebih granular (contoh: menambahkan komentar di setiap fungsi otomatis), beri tahu saya apakah Anda ingin saya lanjutkan mengedit file sekarang, dan apakah ingin komentar singkat atau komprehensif untuk setiap fungsi.

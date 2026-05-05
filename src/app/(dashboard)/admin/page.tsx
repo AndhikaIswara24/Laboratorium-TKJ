@@ -17,6 +17,11 @@ import {
 import { format, isPast, isToday } from 'date-fns';
 import { id } from 'date-fns/locale';
 
+/**
+ * Halaman Dashboard Admin (server component)
+ * - Mengambil ringkasan statistik inventaris, peminjaman, dan evaluasi
+ * - Menyusun data chart dan daftar singkat untuk tampilan admin
+ */
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
 
@@ -158,9 +163,14 @@ export default async function AdminDashboard() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">Daftar Barang Dipinjam</h3>
-              <Link href="/admin/borrowings" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                Lihat Semua
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href="/admin/borrowings" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                  Lihat Semua
+                </Link>
+                <Link href="/reports/peminjaman" target="_blank" className="text-sm font-medium text-green-600 hover:text-green-500">
+                  Laporan
+                </Link>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">

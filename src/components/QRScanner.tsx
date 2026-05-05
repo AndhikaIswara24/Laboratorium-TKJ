@@ -1,8 +1,14 @@
-'use client';
+"use client";
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Komponen QRScanner
+ * - Menginisialisasi `html5-qrcode` secara dinamis pada client
+ * - Memanggil `onScanSuccess` atau `onScanError` sesuai hasil pemindaian
+ * - Opsi `autoRedirectPath` dapat dipakai untuk mengarahkan ke halaman item
+ */
 interface QRScannerProps {
   onScanSuccess?: (decodedText: string, parsedData?: any) => void;
   onScanError?: (error: string) => void;

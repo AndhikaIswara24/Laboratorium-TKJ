@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
+/**
+ * Halaman Registrasi
+ * - Menyediakan form pembuatan akun baru
+ * - Mengirim data ke endpoint `/api/auth/register`
+ */
 export default function Register() {
   const router = useRouter();
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "SISWA" });

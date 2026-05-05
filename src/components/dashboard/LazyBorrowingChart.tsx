@@ -24,6 +24,10 @@ const Chart = dynamic(
   }
 );
 
+/**
+ * Wrapper dinamis untuk `BorrowingChart` yang hanya dimuat di client.
+ * Berguna untuk menghindari menjalankan chart library di server side.
+ */
 export function LazyBorrowingChart({ data }: LazyBorrowingChartProps) {
   return <Chart data={data} />;
 }

@@ -29,6 +29,8 @@ export function StatCard({
   trend,
   color = 'blue'
 }: StatCardProps) {
+  // Komponen kartu statistik kecil untuk dashboard
+  // Menampilkan nilai utama, ikon, deskripsi singkat, dan tren persentase.
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">

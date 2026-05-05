@@ -17,6 +17,10 @@ interface MonitoringFormProps {
   items: MonitoringItem[];
 }
 
+/**
+ * Form monitoring barang untuk mencatat kondisi dan catatan pemeriksaan.
+ * Bisa dipakai oleh Admin atau Guru untuk memperbarui kondisi item.
+ */
 export function MonitoringForm({ items }: MonitoringFormProps) {
   const router = useRouter();
   const [itemId, setItemId] = useState('');

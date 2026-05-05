@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
+/**
+ * Halaman Login
+ * - Menyediakan form email/password yang memanggil `next-auth` credentials
+ * - Jika berhasil, mengarahkan user berdasarkan sesi
+ */
 export default function Login() {
   const router = useRouter();
   const { status } = useSession();

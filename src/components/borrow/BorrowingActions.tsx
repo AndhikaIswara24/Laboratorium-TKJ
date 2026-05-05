@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { approveBorrowing, rejectBorrowing } from '@/app/actions/borrowing';
 import { Check, X } from 'lucide-react';
 
+/**
+ * Komponen aksi cepat untuk setiap permintaan peminjaman di admin.
+ * Menyediakan tombol Approve dan Reject yang memanggil server action terkait.
+ */
 interface BorrowingActionsProps {
   borrowingId: string;
 }

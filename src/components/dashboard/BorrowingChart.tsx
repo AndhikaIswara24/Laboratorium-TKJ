@@ -22,6 +22,10 @@ interface BorrowingChartProps {
   data: BorrowingData[];
 }
 
+/**
+ * Komponen grafik batang untuk menampilkan statistik peminjaman.
+ * Menampilkan jumlah barang yang dipinjam dan dikembalikan per periode.
+ */
 export function BorrowingChart({ data }: BorrowingChartProps) {
   return (
     <div className="h-[300px] w-full mt-4">

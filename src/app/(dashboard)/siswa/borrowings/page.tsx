@@ -8,6 +8,8 @@ import { authOptions } from '@/lib/auth';
 import { getBorrowingStatusLabel } from '@/lib/labels';
 
 export default async function SiswaBorrowingsPage() {
+  // Halaman menampilkan peminjaman aktif milik siswa yang sedang login
+  // Menunjukkan status tiap peminjaman dan informasi batas pengembalian
   const session = await getServerSession(authOptions);
 
   if (!session) {

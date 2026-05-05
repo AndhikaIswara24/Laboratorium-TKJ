@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
+/**
+ * Halaman Dashboard untuk `SISWA`.
+ * Menyediakan akses cepat ke fungsi peminjaman (scan/manual) dan riwayat.
+ */
 export default function SiswaDashboard() {
   const { data: session } = useSession();
 

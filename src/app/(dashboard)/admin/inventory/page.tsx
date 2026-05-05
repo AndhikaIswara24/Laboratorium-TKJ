@@ -21,6 +21,9 @@ const conditionStyles: Record<ItemCondition, string> = {
 };
 
 export default async function AdminInventoryPage() {
+  // Halaman kelola inventaris untuk Admin
+  // Menampilkan statistik singkat, daftar barang, dan akses ke detail/item edit
+  // Menyediakan tombol import dan evaluasi barang
   const items = await prisma.inventoryItem.findMany({
     include: {
       _count: {

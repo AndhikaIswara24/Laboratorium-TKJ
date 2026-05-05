@@ -5,6 +5,12 @@ import { createBorrowing } from '@/app/actions/borrowing';
 import { InventoryItem } from '@prisma/client';
 import { Package, Calendar, FileText, Hash, AlertTriangle, CheckCircle } from 'lucide-react';
 
+/**
+ * Komponen form peminjaman barang.
+ * - Menampilkan daftar barang yang memiliki stok
+ * - Memvalidasi input (tanggal, jumlah, tujuan)
+ * - Memanggil server action `createBorrowing` untuk membuat permintaan
+ */
 interface BorrowFormProps {
   items: Pick<InventoryItem, 'id' | 'name' | 'code' | 'quantity' | 'category'>[];
 }

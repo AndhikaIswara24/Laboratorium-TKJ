@@ -1,12 +1,13 @@
 /**
- * Enhanced Naive Bayes Implementation untuk evaluasi kelayakan inventaris laboratorium
- * Klasifikasi: USABLE, NEEDS_REPAIR, NOT_USABLE
- * 
- * Input Features:
- * - ageInYears: Umur barang dalam tahun
- * - frequencyPerMonth: Frekuensi penggunaan per bulan
- * - repairsCount: Jumlah perbaikan yang pernah dilakukan
- * - conditionScore: Kondisi fisik barang (skala 1-5)
+ * Implementasi Naive Bayes sederhana untuk mengevaluasi kelayakan barang
+ * pada inventaris laboratorium.
+ * Kelas hasil: 'USABLE' | 'NEEDS_REPAIR' | 'NOT_USABLE'
+ *
+ * Fitur input:
+ * - ageInYears: umur barang (tahun)
+ * - frequencyPerMonth: frekuensi penggunaan per bulan
+ * - repairsCount: jumlah kali barang pernah diperbaiki
+ * - conditionScore: skor kondisi fisik (1-5)
  */
 
 export type EvaluationClass = 'USABLE' | 'NEEDS_REPAIR' | 'NOT_USABLE';
@@ -95,15 +96,15 @@ const TRAINING_DATA = {
 };
 
 /**
- * Gaussian Probability Density Function (PDF)
- * Digunakan untuk menghitung probabilitas continuous variables
+ * Fungsi Gaussian PDF untuk menghitung likelihood dari variabel berkelanjutan.
+ * Mengembalikan nilai probabilitas berdasarkan mean dan stddev.
  */
 function gaussianProbability(
   value: number,
   mean: number,
   std: number
 ): number {
-  // Prevent division by zero
+  // Hindari pembagian dengan nol
   if (std === 0) {
     return value === mean ? 1 : 0.0001;
   }
@@ -113,21 +114,24 @@ function gaussianProbability(
 }
 
 /**
- * Laplace smoothing untuk menghindari probabilitas 0
+ * Smoothing kecil untuk menghindari probabilitas 0 yang dapat mempengaruhi
+ * normalisasi posterior.
  */
 function smoothProbability(prob: number, smoothingFactor: number = 0.001): number {
   return Math.max(smoothingFactor, prob);
 }
 
 /**
- * Evaluasi kelayakan item menggunakan Naive Bayes
+ * Evaluasi kelayakan item menggunakan pendekatan Naive Bayes (Gaussian
+ * likelihood untuk fitur continuous).
+ * Mengembalikan detail probabilitas untuk tiap kelas dan reasoning singkat.
  */
 export function evaluateItemFeasibility(features: ItemFeatures): EvaluationResultDetail {
   const { ageInYears, frequencyPerMonth, repairsCount, conditionScore } = features;
 
   // Validasi input
   if (ageInYears < 0 || frequencyPerMonth < 0 || repairsCount < 0 || conditionScore < 1 || conditionScore > 5) {
-    throw new Error('Invalid input features. Age and frequency must be >= 0, repairs must be >= 0, condition score must be 1-5');
+    throw new Error('Input tidak valid. Age/frequency/repairs harus >= 0, conditionScore 1-5');
   }
 
   // Hitung likelihood untuk setiap kelas
@@ -197,7 +201,7 @@ export function evaluateItemFeasibility(features: ItemFeatures): EvaluationResul
       TRAINING_DATA.NOT_USABLE.conditionScoreStats.std
     );
 
-  // Hitung posterior probability dengan prior
+  // Hitung posterior probability dengan mengalikan likelihood dan prior
   const usablePosterior = usableLikelihood * TRAINING_DATA.USABLE.priorProb;
   const needsRepairPosterior = needsRepairLikelihood * TRAINING_DATA.NEEDS_REPAIR.priorProb;
   const notUsablePosterior = notUsableLikelihood * TRAINING_DATA.NOT_USABLE.priorProb;
@@ -209,7 +213,7 @@ export function evaluateItemFeasibility(features: ItemFeatures): EvaluationResul
   const needsRepairProbability = smoothProbability(needsRepairPosterior / totalProbability);
   const notUsableProbability = smoothProbability(notUsablePosterior / totalProbability);
 
-  // Tentukan klasifikasi
+  // Tentukan klasifikasi berdasarkan probabilitas terbesar setelah normalisasi
   const maxProb = Math.max(usableProbability, needsRepairProbability, notUsableProbability);
   let classification: EvaluationClass;
   let probability: number;
@@ -225,10 +229,10 @@ export function evaluateItemFeasibility(features: ItemFeatures): EvaluationResul
     probability = notUsableProbability;
   }
 
-  // Generate reasoning
+  // Buat penjelasan singkat untuk hasil
   const reasoning = generateReasoning(features, classification);
 
-  // Hitung confidence (perbedaan antara top 2 probabilitas)
+  // Hitung confidence sebagai selisih antara dua probabilitas tertinggi
   const probabilities = [usableProbability, needsRepairProbability, notUsableProbability].sort(
     (a, b) => b - a
   );

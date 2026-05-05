@@ -10,6 +10,8 @@ import Link from 'next/link';
 import { getBorrowingStatusLabel } from '@/lib/labels';
 
 export default async function BorrowPage() {
+  // Halaman formulir peminjaman untuk user terautentikasi
+  // Menyediakan daftar barang tersedia dan status peminjaman user
   const session = await getServerSession(authOptions);
   
   if (!session) {

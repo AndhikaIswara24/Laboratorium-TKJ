@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
+/**
+ * Halaman Dashboard untuk peran `GURU`.
+ * Menyediakan ringkasan cepat dan link ke fitur monitoring serta daftar peminjaman.
+ */
 export default function GuruDashboard() {
   const { data: session } = useSession();
 

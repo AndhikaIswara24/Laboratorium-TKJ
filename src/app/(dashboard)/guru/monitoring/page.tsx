@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { getItemConditionLabel } from '@/lib/labels';
 
 export default async function GuruMonitoringPage() {
+  // Halaman monitoring untuk guru
+  // Menyediakan form monitoring dan daftar monitoring terakhir untuk pencatatan kondisi barang
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user.role !== 'GURU' && session.user.role !== 'ADMIN')) {

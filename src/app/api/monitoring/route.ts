@@ -3,6 +3,11 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
+/**
+ * API Route: /api/monitoring
+ * - GET: ambil semua catatan monitoring
+ * - POST: buat catatan monitoring baru (admin/guru)
+ */
 // GET all monitoring records
 export async function GET() {
   try {

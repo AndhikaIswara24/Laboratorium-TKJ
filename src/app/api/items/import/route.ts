@@ -6,6 +6,15 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
+/**
+ * Route untuk mengimpor data inventaris dari file Excel.
+ * Berikut langkah utamanya:
+ * - Validasi session (admin)
+ * - Baca file XLSX dan parsing setiap baris
+ * - Validasi tiap baris, map kolom alias
+ * - Simpan item baru ke database dan generate QR code
+ */
+
 type RawRow = Record<string, unknown>;
 
 interface ParsedInventoryRow {

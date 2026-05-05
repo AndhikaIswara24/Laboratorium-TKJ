@@ -40,6 +40,10 @@ interface FormData {
 }
 
 export default function EvaluationPage() {
+  // Halaman Evaluasi Naive Bayes (client component untuk Admin)
+  // - Mengambil daftar barang dan membiarkan Admin memasukkan fitur evaluasi
+  // - Mengirim data ke API `/api/evaluasi` untuk mendapatkan hasil klasifikasi
+  // - Menampilkan hasil probabilitas, skor, dan penjelasan
   const { data: session } = useSession();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);

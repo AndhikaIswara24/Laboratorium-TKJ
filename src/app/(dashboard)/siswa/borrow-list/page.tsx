@@ -16,6 +16,8 @@ interface InventoryItem {
 }
 
 export default function BorrowListPage() {
+  // Halaman daftar barang untuk siswa (client)
+  // Menampilkan inventaris yang dapat dipilih untuk pengajuan peminjaman secara manual
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

@@ -7,6 +7,12 @@ import { QrCode, ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { useEffect } from 'react';
 import { itemConditionLabels } from '@/lib/labels';
 
+/**
+ * Form pengembalian barang.
+ * - Mendukung pemindaian QR untuk memilih peminjaman aktif
+ * - Menentukan kondisi barang dan catatan
+ * - Memanggil server action `processReturn` untuk memproses pengembalian
+ */
 interface ActiveBorrowing {
   id: string;
   quantity: number;

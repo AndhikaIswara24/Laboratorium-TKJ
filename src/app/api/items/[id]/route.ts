@@ -3,6 +3,12 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
+/**
+ * API Route: /api/items/[id]
+ * - GET: ambil detail item beserta relasinya
+ * - PUT: update item (admin)
+ * - DELETE: hapus item (admin)
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }

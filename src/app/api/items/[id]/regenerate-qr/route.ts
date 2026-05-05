@@ -4,6 +4,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import QRCode from 'qrcode';
 
+// POST /api/items/[id]/regenerate-qr
+// Generate ulang QR code untuk item tertentu (admin saja)
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
